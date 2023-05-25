@@ -6,20 +6,33 @@ from streamlit_folium import st_folium, folium_static
 
 st.title('Visualisation des mairies')
 
-df = pd.read_excel("export_CVU.xlsx").head(100)
-# https://stackoverflow.com/questions/35491274/split-a-pandas-column-of-lists-into-multiple-columns
-# https://stackoverflow.com/questions/38231591/split-explode-a-column-of-dictionaries-into-separate-columns-with-pandas
-df2 = df['centre'].map(eval).apply(pd.Series)
-#df2 = pd.json_normalize(df['centre'])
+@st.cache_data
+def load_data():
+    df = pd.read_excel("export_CVU.xlsx")
+    # https://stackoverflow.com/questions/35491274/split-a-pandas-column-of-lists-into-multiple-columns
+    # https://stackoverflow.com/questions/38231591/split-explode-a-column-of-dictionaries-into-separate-columns-with-pandas
+    df2 = df['centre'].map(eval).apply(pd.Series)
+    # df2 = pd.json_normalize(df['centre'])
 
-df3 = pd.DataFrame(df2["coordinates"].to_list(), columns=['longitude', 'latitude'])
-df[['longitude', 'latitude']] = df3[['longitude', 'latitude']]
+    df3 = pd.DataFrame(df2["coordinates"].to_list(), columns=['longitude', 'latitude'])
+    df[['longitude', 'latitude']] = df3[['longitude', 'latitude']]
+    #df = pd.concat([df.drop(['centre'], axis=1), df['centre'].apply(pd.Series)], axis=1)
 
-#df = pd.concat([df.drop(['centre'], axis=1), df['centre'].apply(pd.Series)], axis=1)
+    #st.dataframe(df)
+    #st.table(df)
+    return df
+
+data_load_state = st.text('Loading data...')
+# Load 10,000 rows of data into the dataframe.
+df = load_data()
+# Notify the reader that the data was successfully loaded.
+data_load_state.text('Loading data...done!')
 
 
-#st.dataframe(df)
-#st.table(df)
+with st.sidebar:
+    text_input = st.text_input('Recherche', '')
+    population_min_input = st.slider('Population min', 0, 300000, 10000)
+    population_max_input = st.slider('Population max', 0, 300000, 50000)
 
 m = folium.Map(location=[df.latitude.quantile(.5), df.longitude.quantile(.5)], 
                  zoom_start=5, control_scale=True)
@@ -32,8 +45,15 @@ columns=['nom', 'Code du département',
        'Libellé de la catégorie socio-professionnelle',
        'Date de début du mandat', 'Date de début de la fonction']
 
+
+df_filtered = df.copy()
+if text_input:
+    df_filtered = df[df['nom'].str.contains(text_input, case=False) | df['Libellé du département'].str.contains(text_input, case=False)]
+
+df_filtered = df_filtered[(df_filtered['population'] >= population_min_input) & (df_filtered['population'] <= population_max_input)]
+
 #Loop through each row in the dataframe
-for i,row in df.iterrows():
+for i,row in df_filtered.iterrows():
     
     #Setup the content of the popup
     iframe = folium.IFrame(str(pd.DataFrame(row[columns]).to_html(header=False))) # row["Well Name"]
