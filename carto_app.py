@@ -28,11 +28,7 @@ def times_to_str(times):
     return ", ".join([f"{time['de'][:5]}-{time['a'][:5]}" for time in times])
 
 
-data_load_state = st.text('Loading data...')
-# Load 10,000 rows of data into the dataframe.
 df = load_data()
-# Notify the reader that the data was successfully loaded.
-data_load_state.text('Loading data...done!')
 
 
 with st.sidebar:
