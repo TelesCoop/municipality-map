@@ -1,6 +1,7 @@
+import json
+
 import streamlit as st
 import pandas as pd
-import numpy as np
 import folium
 from streamlit_folium import st_folium, folium_static
 
@@ -21,6 +22,11 @@ def load_data():
     #st.dataframe(df)
     #st.table(df)
     return df
+
+
+def times_to_str(times):
+    return ", ".join([f"{time['de'][:5]}-{time['a'][:5]}" for time in times])
+
 
 data_load_state = st.text('Loading data...')
 # Load 10,000 rows of data into the dataframe.
@@ -54,13 +60,29 @@ df_filtered = df_filtered[(df_filtered['population'] >= population_min_input) & 
 
 #Loop through each row in the dataframe
 for i,row in df_filtered.iterrows():
-    
+
+    popup_content = ""
     #Setup the content of the popup
-    iframe = folium.IFrame(str(pd.DataFrame(row[columns]).to_html(header=False))) # row["Well Name"]
-    
+    for column in columns:
+        if column not in row.index:
+            continue
+        if column == 'codesPostaux':
+            postal_codes = json.loads(row[column].replace("'", '"'))
+
+            popup_content += f"<div><b>{column.title()}</b>: {', '.join(postal_codes)}</div>"
+        elif column == 'horaires':
+            if type(row[column]) is float:
+                continue
+            hours = json.loads(row[column].replace("'", '"'))
+            hours_str = "".join([f"<li>Du {hour['du']} au {hour['au']} : {times_to_str(hour['heures'])}</li>" for hour in hours])
+            popup_content += f"<div><b>{column.title()}</b>: <ul>{hours_str}</ul></div>"
+        else:
+            popup_content += f"<div><b>{column.title()}</b>: {row[column]}</div>"
+
     #Initialise the popup using the iframe
-    popup = folium.Popup(iframe, min_width=700, max_width=1000)
-    
+    popup = folium.Popup(f"<div>{popup_content}</div>", min_width=300, max_width=300)
+    # popup = folium.Popup(f"<div>{popup_content}</div>", min_width=700, max_width=1000)
+
     #Add each row to the map
     folium.Marker(location=[row['latitude'],row['longitude']],
                   popup = popup, c=row['nom']).add_to(m)
