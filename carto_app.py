@@ -65,7 +65,7 @@ for i,row in df_filtered.iterrows():
         if column == 'codesPostaux':
             postal_codes = json.loads(row[column].replace("'", '"'))
 
-            popup_content += f"<div><b>{column.title()}</b>: {', '.join(postal_codes)}</div>"
+            popup_content += f"<div><b>Code postaux</b>: {', '.join(postal_codes)}</div>"
         elif column == 'horaires':
             if type(row[column]) is float:
                 continue
@@ -73,7 +73,7 @@ for i,row in df_filtered.iterrows():
             hours_str = "".join([f"<li>Du {hour['du']} au {hour['au']} : {times_to_str(hour['heures'])}</li>" for hour in hours])
             popup_content += f"<div><b>{column.title()}</b>: <ul>{hours_str}</ul></div>"
         else:
-            popup_content += f"<div><b>{column.title()}</b>: {row[column]}</div>"
+            popup_content += f"<div><b>{column[0].title()}{column[1:]}</b>: {row[column]}</div>"
 
     #Initialise the popup using the iframe
     popup = folium.Popup(f"<div>{popup_content}</div>", min_width=300, max_width=300)
