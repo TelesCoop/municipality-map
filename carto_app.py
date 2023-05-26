@@ -70,11 +70,12 @@ for i,row in df_filtered.iterrows():
             if type(row[column]) is float:
                 continue
             hours = json.loads(row[column].replace("'", '"'))
-            if hours["du"] == hours["au"]:
-                hours_str = "".join(
-                    [f"<li>{hour['du']} : {times_to_str(hour['heures'])}</li>" for hour in hours])
-            else:
-                hours_str = "".join([f"<li>Du {hour['du']} au {hour['au']} : {times_to_str(hour['heures'])}</li>" for hour in hours])
+            hours_str = ""
+            for hour in hours:
+                if hour["du"] == hour["au"]:
+                    hours_str += f"<li>{hour['du']} : {times_to_str(hour['heures'])}</li>"
+                else:
+                    hours_str += f"<li>Du {hour['du']} au {hour['au']} : {times_to_str(hour['heures'])}</li>"
             popup_content += f"<div><b>{column.title()}</b>: <ul>{hours_str}</ul></div>"
         else:
             popup_content += f"<div><b>{column[0].title()}{column[1:]}</b>: {row[column]}</div>"
