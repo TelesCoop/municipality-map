@@ -9,7 +9,7 @@ st.title('Visualisation des mairies')
 
 @st.cache_data
 def load_data():
-    df = pd.read_excel("export_CVU.xlsx")
+    df = pd.read_csv("export_CVU.csv")
     # https://stackoverflow.com/questions/35491274/split-a-pandas-column-of-lists-into-multiple-columns
     # https://stackoverflow.com/questions/38231591/split-explode-a-column-of-dictionaries-into-separate-columns-with-pandas
     df2 = df['centre'].map(eval).apply(pd.Series)
